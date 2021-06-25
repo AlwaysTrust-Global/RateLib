@@ -15,6 +15,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.dialog_rate.view.*
 
 class RateDialog(private val context: Context)  {
@@ -24,6 +25,7 @@ class RateDialog(private val context: Context)  {
 
     private var isHandleClose = false
     private var onCloseDialog: () -> Unit = {}
+    private var isRate = false
 
     fun setOnCloseDialogListener(onCloseDialog: () -> Unit) : RateDialog {
         this.onCloseDialog = onCloseDialog
@@ -49,6 +51,7 @@ class RateDialog(private val context: Context)  {
             val edtFeedBack = rateInflater.edtFeedBack
 
             ratingView.setOnRatingBarChangeListener { simpleRatingBar, rating, fromUser ->
+                isRate = true
                 if(rating <= 3f) { // Show FeedBack
                     if(!edtFeedBack.isVisible) {
                         edtFeedBack.visibility = View.VISIBLE
@@ -57,32 +60,32 @@ class RateDialog(private val context: Context)  {
                     rateInflater.btnSubmit.setBackgroundColor(Color.parseColor("#E57373"))
                     rateInflater.btnSubmit.setTextColor(Color.WHITE)
                 } else { // Goto Play Store
-//                    edtFeedBack.visibility = View.GONE
-//                    rateInflater.btnSubmit.text = context.getString(R.string.maybe_later)
-//                    rateInflater.btnSubmit.setTextColor(Color.parseColor("#757575"))
-//                    rateInflater.btnSubmit.setBackgroundColor(Color.parseColor("#EEEEEE"))
                     rateDialog.dismiss()
                     openStoreLink(applicationId)
                 }
             }
 
             btnSubmit.setOnClickListener {
-                if(ratingView.rating <= 3) {
-                    if(edtFeedBack.text.toString().trim().isBlank()) {
-                        Toast.makeText(context, "Not empty text", Toast.LENGTH_LONG).show()
-                    } else {
-                        Toast.makeText(context, "Thank you for your feedback!", Toast.LENGTH_LONG).show()
-                        if(isHandleClose) {
-                            onCloseDialog.invoke()
+                if(isRate) {
+                    if(ratingView.rating <= 3) {
+                        if(edtFeedBack.text.toString().trim().isBlank()) {
+                            Toast.makeText(context, "Not empty text", Toast.LENGTH_LONG).show()
                         } else {
-                            if(context is AppCompatActivity) {
-                                context.finishAffinity()
+                            Toast.makeText(context, "Thank you for your feedback!", Toast.LENGTH_LONG).show()
+                            if(isHandleClose) {
+                                onCloseDialog.invoke()
+                            } else {
+                                if(context is AppCompatActivity) {
+                                    context.finishAffinity()
+                                }
                             }
                         }
                     }
                 } else {
                     if(context is AppCompatActivity) {
                         context.finishAffinity()
+                    } else if(context is Fragment) {
+                        context.activity?.finishAffinity()
                     }
                 }
             }
